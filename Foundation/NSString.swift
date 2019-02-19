@@ -343,8 +343,12 @@ open class NSString : NSObject, NSCopying, NSMutableCopying, NSSecureCoding, NSC
 
 extension NSString {
     public func getCharacters(_ buffer: UnsafeMutablePointer<unichar>, range: NSRange) {
-        for idx in 0..<range.length {
-            buffer[idx] = character(at: idx + range.location)
+        let utf16 = _storage.utf16
+	let start = utf16.startIndex
+        let min = utf16.index(start, offsetBy: range.location) //NSNotFound handling?
+        let max = utf16.index(min, offsetBy: range.length)
+	for char in utf16[min..<max] {
+            buffer[idx] = char
         }
     }
     
@@ -368,7 +372,7 @@ extension NSString {
         if type(of: self) == NSString.self || type(of: self) == NSMutableString.self {
             let start = _storage.utf16.startIndex
             let min = _storage.utf16.index(start, offsetBy: range.location)
-            let max = _storage.utf16.index(start, offsetBy: range.location + range.length)
+            let max = _storage.utf16.index(min, offsetBy: range.length)
             return String(decoding: _storage.utf16[min..<max], as: UTF16.self)
         } else {
             let buff = UnsafeMutablePointer<unichar>.allocate(capacity: range.length)
